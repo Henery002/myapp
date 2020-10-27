@@ -55,10 +55,9 @@ class TopologicalGraph extends React.PureComponent {
     const {
       nodes,
       /* connections, loading, */ onSelect,
-      graphHeight,
       graphRef,
     } = this.props;
-    const { width, height, scale, xOffset, yOffset } = this.props;
+    const { width, height, xOffset, yOffset } = this.props;
 
     const children = Object.keys(nodes).map((nodeName) => {
       const { style } = nodes[nodeName];

@@ -5,7 +5,7 @@ import { jsPlumb } from "jsplumb";
 import TopologicalGraph from "./TopologicalGraph.js";
 
 import styles from "./Graph.less";
-import { listblood, listdir } from "../mock/listblood.js";
+import { listblood } from "../mock/listblood.js";
 
 const basicId = "AXUgjQvdZGmXuhpWo7iT";
 
@@ -114,21 +114,19 @@ class RelationTable extends React.PureComponent {
       () => {
         this.getDynamicGraphHeight();
 
-        // 生成relationData数据后，请求编辑弹窗数据(formateTreeData中需要用到relationData)
-        const cataList = listdir;
-
-        this.setState({
-          sourceData: this.formateTreeData(cataList), // 弹窗中的树
-        });
-
         this.setState({
           connections: this.transformNodeLine(this.state.relationData),
         });
 
         this.signAllNodeLayer(() => {
-          this.setState({
-            nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
-          });
+          this.setState(
+            {
+              nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
+            },
+            () => {
+              console.log(this.state, "state...");
+            }
+          );
         });
       }
     );
@@ -272,7 +270,7 @@ class RelationTable extends React.PureComponent {
    *    即横向节点准确均匀分布在1/6~5/6的中心区域
    * top计算方式：见 caculateNodeTopPosition
    */
-  calculateNodePosition = (node, position: string): string => {
+  calculateNodePosition = (node, position) => {
     const { relationData = [] } = this.state;
     const preList = Array.from(
       new Set(
@@ -319,7 +317,7 @@ class RelationTable extends React.PureComponent {
    *    ((1/4)/2 + (3/4)*(当前节点的顺序(从1开始)/每层纵向总结点数 - 1/当前空间(2*纵向总结点数)等份))*100% - (节点高度/2)px
    *    即纵向节点准确均匀分布在1/8~7/8的中心区域内
    */
-  caculateNodeTopPosition = (curNode): string => {
+  caculateNodeTopPosition = (curNode) => {
     const { relationData } = this.state;
     // 每一层级纵向节点数组
     const verticalLayerNodeList = relationData?.filter(
@@ -337,55 +335,6 @@ class RelationTable extends React.PureComponent {
     return `calc(${Number(percentage).toFixed(2) * 100}% - ${
       curNode.index === "p0" ? 28 : 20
     }px)`; // 大图标高56px，小图标高40px
-  };
-
-  /**
-   * 获取待选表所有叶节点（非下游节点、非当前表，即可被选择的节点），全选时使用
-   * NOTE 待选表树的每个节点（表）都有`bloodtables`属性（从接口直接获取），标记该节点`自身的血缘数据`
-   * 但/listblood接口获取到的relationData中的每个节点带有的属性是`bloodfatherids`，没有bloodtables。此处需要尤其注意
-   */
-  getTreeNodeLeaf = (nodeData, leafNodes) => {
-    const {
-      assetCenterBasic: {
-        titleInfo: { id: basicId },
-      },
-    } = this.props;
-
-    nodeData?.forEach((nodeItem) => {
-      if (nodeItem?.name) {
-        this.getTreeNodeLeaf(nodeItem.children, leafNodes);
-      } else if (
-        // 表（叶）节点、非当前节点且非下游的节点，被收集
-        !this.checkChildRelatedTable(nodeItem) &&
-        nodeItem.id !== basicId &&
-        // (!nodeItem.children || !nodeItem.children.length)
-        nodeItem?.tbname
-      ) {
-        leafNodes.push({
-          key: nodeItem.id,
-          title: nodeItem?.name ?? nodeItem?.tbname,
-          noneauthed: nodeItem.noneauthed ?? false,
-          bloodtables: nodeItem.bloodtables,
-        });
-      }
-    });
-
-    // console.log(nodeData, leafNodes, 'leafNodes'); // leafNodes已正确，不会收集children: []的父节点
-    return leafNodes;
-  };
-
-  // 获取待选表所有节点key，全选时使用(包括“全选”节点)
-  getTreeNodeAll = (nodeData, allNodes) => {
-    nodeData?.forEach((nodeItem) => {
-      if (nodeItem?.children?.length) {
-        allNodes.push(nodeItem.id);
-        this.getTreeNodeAll(nodeItem.children, allNodes);
-      } else if (!nodeItem?.children || !nodeItem.children.length) {
-        allNodes.push(nodeItem.id);
-      }
-    });
-
-    return Array.from(new Set(allNodes));
   };
 
   /**
@@ -422,92 +371,6 @@ class RelationTable extends React.PureComponent {
     });
   };
 
-  /*
-   * 处理backupData中异常的数据格式，使之符合接口参数规范
-   * !!NOTE
-   * backupdata由targetData处理得到，backupDataItem有的带bloodtables属性，
-   * 有的带bloodfatherids属性，保存时需甄别（其特殊性由接口返回值导致）
-   * #0824解决:
-   *  <1>. backupdata中除了自带当前节点（及其bloodfatherids），其他为targetData中的带bloodtables的节点
-   *  <2>. bloodtables中的值即为保存时需要一并传入的关联节点的血缘链
-   *  <3>. bloodtables中可能存在当前节点（但这个当前节点所带的bloodfatherids是旧值），需要将这个节点过滤掉，用新值替换（新值即为<1>中自带的这个节点）
-   *  <4>. 其中<3>也是导致保存时不成功（仍为旧值）的主要原因
-   */
-  getBloodtablesPayload = (bloodDatas) => {
-    let bloodTablesAll = [];
-
-    // 当前中心节点（用于删除旧血缘链上该节点的旧值）
-    const curNode = bloodDatas.find((it) => it.index === "p0");
-
-    bloodDatas?.forEach((item) => {
-      if (item.hasOwnProperty("bloodfatherids")) {
-        bloodTablesAll.push({
-          id: item.id,
-          tbname: item.name,
-          bloodfatherids: item.bloodfatherids,
-        });
-      } else if (item.hasOwnProperty("bloodtables")) {
-        if (item.bloodtables?.find((it) => it.tbname === curNode?.name)) {
-          item.bloodtables = item.bloodtables.filter(
-            (it) => it.tbname !== curNode?.name
-          );
-        }
-
-        bloodTablesAll = [...bloodTablesAll, ...(item.bloodtables ?? [])];
-      }
-    });
-
-    // 因为不同targetData中节点的bloodtables值（即血缘链上）可能存在同一个节点多次，此处需要做去重
-    return _.uniqWith(bloodTablesAll, _.isEqual);
-  };
-
-  /**
-   * 检测当前节点是否是中心节点的下游节点
-   * @return {boolean}
-   */
-  checkChildRelatedTable = (nodeData) => {
-    const { relationData } = this.state;
-
-    const childrenNodes = relationData?.filter((item) =>
-      item.index?.includes("n")
-    );
-    return !!childrenNodes?.find((item) => item.id === nodeData.id);
-  };
-
-  /**
-   * 生成格式化后的树数据(弹窗中)
-   */
-  formateTreeData = (sourceData) => {
-    // 收集根节点数据newData
-    const newData = sourceData.filter((item) => !item.parentid);
-
-    return this.recurseTreeNode(sourceData, newData);
-  };
-
-  // 根据根节点newData递归遍历并收集节点层级
-  recurseTreeNode = (sourceData, newData) => {
-    newData.forEach((newItem) => {
-      sourceData.forEach((sourceItem) => {
-        // 查找父节点的子节点
-        if (sourceItem.parentid === newItem.id) {
-          if (
-            newItem.children &&
-            !newItem.children.find((item) => item.id === sourceItem.id)
-          ) {
-            newItem.children.push(sourceItem);
-          } else if (!newItem.children) {
-            newItem.children = [sourceItem];
-          }
-          // @ts-ignore
-          this.recurseTreeNode(sourceData, newItem.children);
-        }
-      });
-    });
-
-    // return this.recurseTableNode(newData);
-    return newData;
-  };
-
   render() {
     window.onresize = this.setContainer;
 
@@ -516,10 +379,6 @@ class RelationTable extends React.PureComponent {
         <TopologicalGraph
           {...this.state}
           {...this.props}
-          onSelect={this.onSelect}
-          changeState={this.changeState}
-          editRelatedTable={this.editRelatedTable}
-          signAllNodeLayer={this.signAllNodeLayer}
           graphRef={this.graphRef}
         />
       </div>
