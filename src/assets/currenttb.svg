@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="56" height="56" viewBox="0 0 56 56">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.085" y1="0.904" x2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#5fd0f5"/>
+      <stop offset="0.534" stop-color="#239fe7"/>
+      <stop offset="0.78" stop-color="#2599e7"/>
+      <stop offset="1" stop-color="#267edf"/>
+    </linearGradient>
+  </defs>
+  <g id="表" transform="translate(56.2 -0.2) rotate(90)">
+    <g id="矩形" transform="translate(0.2 0.2)">
+      <path id="Rectangle" d="M28.2.2c28,0,28,12.483,28,28s0,28-28,28S.2,43.6.2,28.2.2.2,28.2.2Z" transform="translate(-0.2 -0.2)" fill="url(#linear-gradient)"/>
+    </g>
+    <path id="路径_425" data-name="路径 425" d="M34.5,22.4v.117h0Z" transform="translate(5.717 3.7)" fill="#fff"/>
+    <path id="table" d="M30.968,0H1.13A1.138,1.138,0,0,0,0,1.069H0V22.931A1.138,1.138,0,0,0,1.13,24H30.855a1.138,1.138,0,0,0,1.13-1.069h0V1.069A.975.975,0,0,0,30.968,0ZM29.5,7.129H21.926V2.5H29.5Zm0,7.6H21.926V9.267H29.5ZM12.433,9.267h7.12v5.465h-7.12Zm7.233-2.139H12.433V2.5h7.12ZM2.6,9.267h7.573v5.465H2.6ZM2.6,2.5h7.573V7.129H2.6Zm0,14.5h7.573v4.634H2.6Zm9.833,0h7.12v4.634h-7.12ZM29.5,21.624H21.926V16.99H29.5Z" transform="translate(40.2 12.2) rotate(90)" fill="#fff"/>
+  </g>
+</svg>
