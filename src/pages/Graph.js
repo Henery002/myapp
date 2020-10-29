@@ -76,12 +76,14 @@ class RelationTable extends React.PureComponent {
         const sourceItem = nodeLine[value.source]?.style?.top; // calc(xx% - xxpx)
         const targetItem = nodeLine[value.target]?.style?.top; // calc(xx% - xxpx)
 
-        const line =
-          !!sourceItem &&
-          !!targetItem &&
-          sourceItem.slice(5, 7) === targetItem.slice(5, 7)
-            ? "Straight"
-            : "Bezier";
+        // const line =
+        //   !!sourceItem &&
+        //   !!targetItem &&
+        //   sourceItem.slice(5, 7) === targetItem.slice(5, 7)
+        //     ? "Straight"
+        //     : "Bezier";
+        // NOTE NOTE
+        const line = "Bezier";
 
         if (value.source) {
           this.$jsPlumb.connect({
@@ -124,7 +126,7 @@ class RelationTable extends React.PureComponent {
               nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
             },
             () => {
-              console.log(this.state, "state...");
+              // console.log(this.state.nodes, "state-nodes...");
             }
           );
         });
@@ -162,6 +164,7 @@ class RelationTable extends React.PureComponent {
       }
     });
 
+    console.log(newData, "newData...");
     return newData;
   };
 
@@ -187,7 +190,7 @@ class RelationTable extends React.PureComponent {
     });
 
     this.setContainer("linetype", node);
-    // console.log(node, 'node...');
+    console.log(node, "node...");
 
     return node;
   };
@@ -226,12 +229,12 @@ class RelationTable extends React.PureComponent {
     // console.log(relationData, '初始化时的relationData...');
 
     this.signSideNodeLayer(middleNode, "pre", callback);
-    this.signSideNodeLayer(middleNode, "next", callback);
+    // this.signSideNodeLayer(middleNode, "next", callback);
   };
 
   /**
    * 4.1 拓扑图
-   * 根据中间节点，计算其他节点相对于该节点的左右位置'p{index}、n{index}'，即为节点生成 index 属性值
+   * TEMP 根据中间节点，计算其他节点相对于该节点的左右位置'p{index}、n{index}'，即为节点生成 index 属性值
    * @param {SourceDataItem} node - 当前节点
    * @param {string} order - 左右位置
    */
@@ -239,20 +242,32 @@ class RelationTable extends React.PureComponent {
     const { relationData = [] } = this.state;
     const curIndex = parseInt(node.index?.slice(1), 10);
 
+    // console.log(node, curIndex, "curIndex...");
+
     if (node[order]?.length) {
       node[order].forEach((perItem) => {
         const matchItem = relationData.find((item) => item.id === perItem);
         if (matchItem) {
-          Object.assign(matchItem, {
-            index: `${order.slice(0, 1)}${curIndex + 1}`,
-          });
-          this.signSideNodeLayer(
-            relationData.find((item) => item.id === perItem),
-            order
-          );
+          console.log(node, matchItem, curIndex, "将要改变index时...");
+
+          /**
+           * NOTE NOTE
+           * 如果matchItem的index的序号已经大于当前curIndex，
+           * 说明已经出现更长的路径，则不能再修改其index，即不能再将其路径改短
+           */
+          if (!matchItem.index || Number(matchItem.index.slice(1)) < curIndex) {
+            Object.assign(matchItem, {
+              index: `${order.slice(0, 1)}${curIndex + 1}`,
+            });
+          }
+
+          this.signSideNodeLayer(matchItem, order);
         }
       });
     }
+
+    // console.log(node, "生成计算index后的node数据...");
+
     this.setState(
       {
         // relationData,
@@ -272,6 +287,8 @@ class RelationTable extends React.PureComponent {
    */
   calculateNodePosition = (node, position) => {
     const { relationData = [] } = this.state;
+    console.log(relationData, "重新计算路径后得到的relationData...");
+
     const preList = Array.from(
       new Set(
         relationData
@@ -287,13 +304,15 @@ class RelationTable extends React.PureComponent {
       )
     ); // => ['n1, 'n2', ...]
 
-    // NOTE
+    // NOTE NOTE
     const allLength = preList.length + nextList.length;
     // 当前节点在横向层级中的层级顺序(从1开始)
+    // const curNodeIndex = node.index?.includes("p")
+    //   ? preList.length - preList.indexOf(node.index)
+    //   : preList.length + nextList.indexOf(node.index) + 1;
+
     const curNodeIndex = node.index?.includes("p")
-      ? /* ? preList.indexOf(node.index) + 1 */
-        // allLength - preList.indexOf(node.index)
-        preList.length - preList.indexOf(node.index)
+      ? preList.length - Number(node.index.slice(1))
       : preList.length + nextList.indexOf(node.index) + 1;
 
     switch (position) {
@@ -332,9 +351,16 @@ class RelationTable extends React.PureComponent {
       (3 / 4) *
         ((curIndex + 1) / verticalLayerNodeList.length -
           1 / (2 * verticalLayerNodeList.length));
-    return `calc(${Number(percentage).toFixed(2) * 100}% - ${
-      curNode.index === "p0" ? 28 : 20
-    }px)`; // 大图标高56px，小图标高40px
+
+    // return `calc(${Number(percentage).toFixed(2) * 100}% - ${
+    //   curNode.index === "p0" ? 28 : 20
+    // }px)`; // 大图标高56px，小图标高40px
+
+    // NOTE NOTE
+    const verticalDecrementSize = 100 * Math.random().toFixed(1);
+    return `calc(${
+      Number(percentage).toFixed(2) * 100
+    }% - ${verticalDecrementSize}px)`;
   };
 
   /**
