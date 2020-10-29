@@ -5,9 +5,7 @@ import { jsPlumb } from "jsplumb";
 import TopologicalGraph from "./TopologicalGraph.js";
 
 import styles from "./Graph.less";
-import { listblood } from "../mock/listblood.js";
-
-const basicId = "AXUgjQvdZGmXuhpWo7iT";
+import { basicId, listblood } from "../mock/listblood.js";
 
 class RelationTable extends React.PureComponent {
   // $jsPlumb: InstanceType<typeof jsPlumbInstance>;
@@ -60,7 +58,7 @@ class RelationTable extends React.PureComponent {
 
   // 在STEP-2中调用
   setContainer = (type, node) => {
-    const { connections, nodes } = this.state;
+    const { connections /*, nodes*/ } = this.state;
 
     this.$jsPlumb.setContainer(
       document.getElementById("jsplumb_topological_graph")
@@ -72,9 +70,9 @@ class RelationTable extends React.PureComponent {
     setTimeout(() => {
       connections.forEach((value) => {
         // 根据每条连线的两个节点排布位置，若水平高度相等，采用Straight，否则采用Bezier
-        const nodeLine = type === "linetype" ? node : nodes;
-        const sourceItem = nodeLine[value.source]?.style?.top; // calc(xx% - xxpx)
-        const targetItem = nodeLine[value.target]?.style?.top; // calc(xx% - xxpx)
+        // const nodeLine = type === "linetype" ? node : nodes;
+        // const sourceItem = nodeLine[value.source]?.style?.top; // calc(xx% - xxpx)
+        // const targetItem = nodeLine[value.target]?.style?.top; // calc(xx% - xxpx)
 
         // const line =
         //   !!sourceItem &&
@@ -253,9 +251,12 @@ class RelationTable extends React.PureComponent {
           /**
            * NOTE NOTE
            * 如果matchItem的index的序号已经大于当前curIndex，
-           * 说明已经出现更长的路径，则不能再修改其index，即不能再将其路径改短
+           * 说明已经出现更长的路径（即当前节点的这个路径），则不能再修改其index，即不能再将其路径改短
            */
-          if (!matchItem.index || Number(matchItem.index.slice(1)) < curIndex) {
+          if (
+            !matchItem.index ||
+            Number(matchItem.index.slice(1)) <= curIndex
+          ) {
             Object.assign(matchItem, {
               index: `${order.slice(0, 1)}${curIndex + 1}`,
             });
@@ -287,7 +288,7 @@ class RelationTable extends React.PureComponent {
    */
   calculateNodePosition = (node, position) => {
     const { relationData = [] } = this.state;
-    console.log(relationData, "重新计算路径后得到的relationData...");
+    // console.log(relationData, "重新计算路径后得到的relationData...");
 
     const preList = Array.from(
       new Set(
