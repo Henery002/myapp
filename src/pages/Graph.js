@@ -1,15 +1,11 @@
 import React from "react";
-import _ from "lodash";
-import { jsPlumb } from "jsplumb";
 
-import TopologicalGraph from "./TopologicalGraph.js";
+import G6graph from "./G6graph";
 
 import styles from "./Graph.less";
 import { basicId, listblood } from "../mock/listblood.js";
 
 class RelationTable extends React.PureComponent {
-  // $jsPlumb: InstanceType<typeof jsPlumbInstance>;
-
   graphRef = React.createRef();
 
   constructor(props) {
@@ -25,7 +21,7 @@ class RelationTable extends React.PureComponent {
       xOffset: 0.0,
       yOffset: 0.0,
       relationData: [],
-      nodes: {},
+      nodes: [],
       connections: [],
       sourceData: [],
       targetData: [],
@@ -35,70 +31,13 @@ class RelationTable extends React.PureComponent {
       // relatedTableList: [],
 
       // 画布高度动态调整(%)
-      graphHeight: 100,
+      // graphHeight: 100,
     };
-
-    this.$jsPlumb = jsPlumb.getInstance({
-      Endpoint: "Blank",
-      EndpointStyle: {},
-      PaintStyle: {
-        stroke: "#1980ff",
-        strokeWidth: 1,
-      },
-      HoverPaintStyle: {},
-      Connector: ["Bezier", { cornerRadius: 1 }],
-      ConnectionsDetachable: false,
-      ConnectionOverlays: [],
-    });
   }
 
   componentDidMount() {
     this.getInitialData();
   }
-
-  // 在STEP-2中调用
-  setContainer = (type, node) => {
-    const { connections /*, nodes*/ } = this.state;
-
-    this.$jsPlumb.setContainer(
-      document.getElementById("jsplumb_topological_graph")
-    );
-
-    this.$jsPlumb.deleteEveryConnection();
-
-    // 获取DOM实例后
-    setTimeout(() => {
-      connections.forEach((value) => {
-        // 根据每条连线的两个节点排布位置，若水平高度相等，采用Straight，否则采用Bezier
-        // const nodeLine = type === "linetype" ? node : nodes;
-        // const sourceItem = nodeLine[value.source]?.style?.top; // calc(xx% - xxpx)
-        // const targetItem = nodeLine[value.target]?.style?.top; // calc(xx% - xxpx)
-
-        // const line =
-        //   !!sourceItem &&
-        //   !!targetItem &&
-        //   sourceItem.slice(5, 7) === targetItem.slice(5, 7)
-        //     ? "Straight"
-        //     : "Bezier";
-        // NOTE NOTE
-        const line = "Bezier";
-
-        if (value.source) {
-          this.$jsPlumb.connect({
-            source: value.source,
-            target: value.target,
-            anchor: ["Right", "Left"],
-            connector: [`${line}`, { curviness: 120 }],
-            cssClass: "hoverConnector",
-            overlays: [
-              ["Arrow", { width: 10, length: 10, location: 1, id: "myArrow" }],
-            ],
-          });
-        }
-      });
-      this.$jsPlumb.setSuspendDrawing(false, true);
-    }, 200);
-  };
 
   /**
    * 请求接口数据
@@ -131,7 +70,6 @@ class RelationTable extends React.PureComponent {
    * @returns newData - 格式化后的数据结构
    */
   transformInitData = (sourceData) => {
-    // console.log(sourceData, "sourceData...");
     const newData = sourceData?.map(
       ({ id, tbname, bloodfatherids, noneauthed = false }) => ({
         id,
@@ -155,7 +93,6 @@ class RelationTable extends React.PureComponent {
       }
     });
 
-    // console.log(newData, "newData...");
     return newData;
   };
 
@@ -164,24 +101,19 @@ class RelationTable extends React.PureComponent {
    */
   transformSourceToNodeData = () => {
     const { relationData } = this.state;
-    const node = {};
-    relationData?.forEach((item) => {
-      Object.assign(node, {
-        [`${item.id}`]: {
-          label: item.name,
-          target: item.target,
-          index: item.index,
-          noneauthed: item.noneauthed,
-          style: {
-            left: this.calculateNodePosition(item, "left"),
-            top: this.calculateNodePosition(item, "top"),
-          },
+    const node = relationData?.map((item) => {
+      return {
+        id: item.id,
+        label: item.name,
+        target: item.target,
+        index: item.index,
+        noneauthed: item.noneauthed,
+        style: {
+          left: this.calculateNodePosition(item, "left"),
+          top: this.calculateNodePosition(item, "top"),
         },
-      });
+      };
     });
-
-    this.setContainer("linetype", node);
-    // console.log(node, "node...");
 
     return node;
   };
@@ -234,8 +166,6 @@ class RelationTable extends React.PureComponent {
       node[order].forEach((perItem) => {
         const matchItem = relationData.find((item) => item.id === perItem);
         if (matchItem) {
-          // console.log(node, matchItem, curIndex, "将要改变index时...");
-
           /**
            * NOTE NOTE
            * 如果matchItem的index的序号已经大于当前curIndex，
@@ -261,7 +191,7 @@ class RelationTable extends React.PureComponent {
         relationData: relationData.filter((item) => !!item.index),
       },
       () => {
-        this.getDynamicGraphHeight();
+        // this.getDynamicGraphHeight();
 
         callback?.();
       }
@@ -270,14 +200,26 @@ class RelationTable extends React.PureComponent {
 
   /**
    * 5. 根据node的index值，计算其left/top值
+   */
+  calculateNodePosition = (node, position) => {
+    switch (position) {
+      case "left":
+        return this.caculateLeftPosition(node);
+      case "top":
+        return this.caculateTopPosition(node);
+      default:
+        return "0";
+    }
+  };
+
+  /**
+   * 5.1
    * @description
    * left计算方式：((1/3)/2 + (2/3)*(当前节点的顺序(从1开始)/总结点数 - 1/当前空间(2*总节点数)等份))*100% - (节点宽度/2)px
    *    即横向节点准确均匀分布在1/6~5/6的中心区域
-   * top计算方式：见 caculateNodeTopPosition
    */
-  calculateNodePosition = (node, position) => {
+  caculateLeftPosition = (node) => {
     const { relationData = [] } = this.state;
-    // console.log(relationData, "重新计算路径后得到的relationData...");
 
     const preList = Array.from(
       new Set(
@@ -294,39 +236,27 @@ class RelationTable extends React.PureComponent {
       )
     ); // => ['n1, 'n2', ...]
 
-    // NOTE NOTE
     const allLength = preList.length + nextList.length;
-    // 当前节点在横向层级中的层级顺序(从1开始)
-    // const curNodeIndex = node.index?.includes("p")
-    //   ? preList.length - preList.indexOf(node.index)
-    //   : preList.length + nextList.indexOf(node.index) + 1;
 
+    // 当前节点在横向层级中的层级顺序(从1开始)
     const curNodeIndex = node.index?.includes("p")
       ? preList.length - Number(node.index.slice(1))
       : preList.length + nextList.indexOf(node.index) + 1;
 
-    switch (position) {
-      case "left": {
-        // calc(xx% - 30px)
-        const percentage =
-          1 / 6 + (2 / 3) * (curNodeIndex / allLength - 1 / (2 * allLength));
-        return `calc(${Number(percentage).toFixed(2) * 100}% - 30px)`;
-      }
-      case "top": // calc(xx% - 20px)
-        return this.caculateNodeTopPosition(node);
-      default:
-        return "0";
-    }
+    const percentage =
+      1 / 6 + (2 / 3) * (curNodeIndex / allLength - 1 / (2 * allLength));
+
+    return `calc(${Number(percentage).toFixed(2) * 100}% - 30px)`;
   };
 
   /**
-   * 5.1 计算节点top值，计算方式类同left
+   * 5.2 计算节点top值，计算方式类同left
    * @description
    * top计算方式：
    *    ((1/4)/2 + (3/4)*(当前节点的顺序(从1开始)/每层纵向总结点数 - 1/当前空间(2*纵向总结点数)等份))*100% - (节点高度/2)px
    *    即纵向节点准确均匀分布在1/8~7/8的中心区域内
    */
-  caculateNodeTopPosition = (curNode) => {
+  caculateTopPosition = (curNode) => {
     const { relationData } = this.state;
     // 每一层级纵向节点数组
     const verticalLayerNodeList = relationData?.filter(
@@ -346,57 +276,19 @@ class RelationTable extends React.PureComponent {
     //   curNode.index === "p0" ? 28 : 20
     // }px)`; // 大图标高56px，小图标高40px
 
-    // NOTE NOTE
     const verticalDecrementSize = (100 * Math.random()).toFixed(2);
+
     return `calc(${
       Number(percentage).toFixed(2) * 100
-    }% - ${verticalDecrementSize}px)`;
-  };
-
-  /**
-   * NOTE 动态调整画布高度，根据拓扑图中节点树最多(m个)的列的高度来动态调整画布高度
-   * 调整后的画布高度/原画布高度x：((1+(70m-0.75x)/0.75x)*100)%
-   * 数据说明：70: 单个节点所占height; 0.75: 画布纵向内容部分占据的比例
-   */
-  getDynamicGraphHeight = () => {
-    const { relationData } = this.state;
-    // 每列节点个数([1, 4, 2])
-    const columnCount = [];
-    // 所有列(['p0', 'p1', 'p2'])
-    const columnArr = Array.from(new Set(_.map(relationData, "index")));
-    columnArr.forEach((item, idx) => {
-      columnCount[idx] = relationData?.filter(
-        (it) => it.index === item
-      )?.length;
-    });
-
-    const columnMaxCount = Math.max(...columnCount);
-
-    // 画布样式（高度），此处获取的是画布父级div
-    // （因其高度一直不会变，且和画布初始化时的高度一致，所以可用来在每次编辑后作为画布初始高度值来做计算）
-    const graphStyle = this.graphRef?.current.getBoundingClientRect();
-
-    this.setState({
-      graphHeight:
-        70 * columnMaxCount > 0.75 * graphStyle.height
-          ? (1 +
-              (70 * columnMaxCount - parseInt(0.75 * graphStyle.height, 10)) /
-                parseInt(0.75 * graphStyle.height, 10)) *
-            100
-          : 100,
-    });
+      // }% - ${verticalDecrementSize}px)`;
+    }% - ${curNode.index === "p0" ? 28 : 20}px)`;
   };
 
   render() {
-    window.onresize = this.setContainer;
-
+    const { nodes, connections } = this.state;
     return (
       <div className={styles.relationTable}>
-        <TopologicalGraph
-          {...this.state}
-          {...this.props}
-          graphRef={this.graphRef}
-        />
+        <G6graph {...this.state} dataSource={{ nodes, edges: connections }} />
       </div>
     );
   }

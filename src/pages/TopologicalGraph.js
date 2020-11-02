@@ -33,20 +33,21 @@ class TopologicalGraph extends React.PureComponent {
    */
   children = (id /* , drag */) => {
     const { nodes } = this.props;
+    const currentNode = nodes.filter((it) => it.id === id)?.[0];
     return (
       <NodeContent
         // id={id}
         className={`${styles.nodeItemContent} ${
-          nodes[id].noneauthed && styles.nodeItemDisabled
+          currentNode.noneauthed && styles.nodeItemDisabled
         }`}
       >
-        <Tooltip title={nodes[id].noneauthed && "您没有该表访问权限"}>
+        <Tooltip title={currentNode.noneauthed && "您没有该表访问权限"}>
           <div id={id} style={{ display: "inline-block", padding: "0 2px" }}>
             <img src={this.getNodeItemIcon(id)} alt="icon" />
           </div>
         </Tooltip>
         <Ellipsis tooltip lines={1} showCenter>
-          {nodes[id].label || "undefined"}
+          {currentNode.label || "undefined"}
         </Ellipsis>
       </NodeContent>
     );
@@ -61,20 +62,9 @@ class TopologicalGraph extends React.PureComponent {
     } = this.props;
     const { width, height, xOffset, yOffset } = this.props;
 
-    Object.values(nodes).forEach((it, idx) => {
-      Object.assign(it, {
-        id: Object.keys(nodes)[idx],
-      });
-    });
-    const transformNodes = Object.values(nodes);
+    const dataSource = { nodes, edges: connections };
 
-    // console.log(transformNodes, connections, "血缘关系数据...");
-
-    const dataSource = { nodes: transformNodes, edges: connections };
-
-    const children = Object.keys(nodes).map((nodeName) => {
-      const { style } = nodes[nodeName];
-
+    const children = nodes.map(({ id: nodeName, style }) => {
       return (
         <Node
           id={nodeName}

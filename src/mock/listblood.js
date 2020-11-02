@@ -147,7 +147,102 @@ const listblood = [
     bloodfatherids: ["S6zDBWAnvoazCcKq-RW-", "mJsPNwCQoSrabaH1omIj"],
   },
 ];
+
 // TEMP
 const basicId = "S6zDBWAnvoazCcKq-RW-";
+
+// TEMP
+const listblood_2 = [
+  {
+    id: "0ctI1LwsziQ3bU8Umaiv",
+    tbname: "all_types",
+    bloodfatherids: [
+      "jwHaBQwKDvUhQr7o9WP9",
+      "Ps9hxrFB5UBWMyZwn2l3",
+      "WoyZhiPZQp9MEvA3pkY3",
+      "977dgfrkNpBCNxyCK-sI",
+      "XmFitcHDP5URoQLVIOdg",
+      "IQ8XVNtaLOP10ibS7iTg",
+      "AXWHBaML5H3iZC4cRa34",
+      "TT8RGwxPLXwQseKiHhG4",
+      "1cXPGdyjw5IQaw8AgveF",
+      "j9528C3GrK4hHj0xFo-R",
+      "ndM1dB1LL-b5B4RtYEEk",
+      "Rkq0o899HlDDBWTzdV9M",
+      "hdZg5WPsW8OFNaQ2RTVD",
+      "4NcjSe5ux6yukyZQGtmG",
+      "qeyBg2c2qKKMO5aJr7pl",
+      "fiv3FtpixzY-gRktJO5S",
+      "IPKBs6bE6YLM0UmNIYeg",
+      "n7LDI-TpgxF0xt8HetfB",
+      "-BTIRGaDmv1FBEb4TUkU",
+      "B5hI451rcRpcyYW3yNFd",
+      "qebkiKenD3SuG5DmhVna",
+      "XLSMAfOGpBQC6HekQced",
+      "oCf-O5CImC8fQB5IR1S8",
+    ],
+  },
+  {
+    id: "jwHaBQwKDvUhQr7o9WP9",
+    tbname: "poc_teryx_stork_dl_alltypes",
+    bloodfatherids: [],
+  },
+  {
+    id: "Ps9hxrFB5UBWMyZwn2l3",
+    tbname: "jiaotong_accident",
+    bloodfatherids: [],
+  },
+  { id: "WoyZhiPZQp9MEvA3pkY3", tbname: "testinterval", bloodfatherids: [] },
+  {
+    id: "977dgfrkNpBCNxyCK-sI",
+    tbname: "poc_oracle_stork_dl_2015person",
+    bloodfatherids: [],
+  },
+  {
+    id: "XmFitcHDP5URoQLVIOdg",
+    tbname: "jiaotong_personinfo",
+    bloodfatherids: [],
+  },
+  {
+    id: "IQ8XVNtaLOP10ibS7iTg",
+    tbname: "yyq_table_testing1_1030_stork",
+    bloodfatherids: [],
+  },
+  { id: "AXWHBaML5H3iZC4cRa34", tbname: "teryx_hive1", bloodfatherids: [] },
+  { id: "TT8RGwxPLXwQseKiHhG4", tbname: "teryx_hive", bloodfatherids: [] },
+  { id: "1cXPGdyjw5IQaw8AgveF", tbname: "table_200", bloodfatherids: [] },
+  {
+    id: "j9528C3GrK4hHj0xFo-R",
+    tbname: "table_200_copy1_copy11",
+    bloodfatherids: [],
+  },
+  { id: "ndM1dB1LL-b5B4RtYEEk", tbname: "stork_hive", bloodfatherids: [] },
+  { id: "Rkq0o899HlDDBWTzdV9M", tbname: "conf", bloodfatherids: [] },
+  { id: "hdZg5WPsW8OFNaQ2RTVD", tbname: "mysql_hive1", bloodfatherids: [] },
+  { id: "4NcjSe5ux6yukyZQGtmG", tbname: "testtest111", bloodfatherids: [] },
+  {
+    id: "qeyBg2c2qKKMO5aJr7pl",
+    tbname: "application_copy1",
+    bloodfatherids: [],
+  },
+  { id: "fiv3FtpixzY-gRktJO5S", tbname: "testapp", bloodfatherids: [] },
+  { id: "IPKBs6bE6YLM0UmNIYeg", tbname: "cube", bloodfatherids: [] },
+  { id: "n7LDI-TpgxF0xt8HetfB", tbname: "datatype", bloodfatherids: [] },
+  { id: "-BTIRGaDmv1FBEb4TUkU", tbname: "application", bloodfatherids: [] },
+  { id: "B5hI451rcRpcyYW3yNFd", tbname: "add", bloodfatherids: [] },
+  { id: "qebkiKenD3SuG5DmhVna", tbname: "all", bloodfatherids: [] },
+  {
+    id: "XLSMAfOGpBQC6HekQced",
+    tbname: "poc_mysql_hive_dl_alltypes",
+    bloodfatherids: [],
+  },
+  {
+    id: "oCf-O5CImC8fQB5IR1S8",
+    tbname: "poc_stork_hive_dl_alltypes",
+    bloodfatherids: [],
+  },
+];
+
+const basicId_2 = "0ctI1LwsziQ3bU8Umaiv";
 
 export { basicId, listblood };
