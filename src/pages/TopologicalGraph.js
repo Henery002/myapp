@@ -1,11 +1,12 @@
 import React from "react";
 import { Tooltip, Spin } from "antd";
-// import { debounce } from 'lodash';
 import Ellipsis from "ant-design-pro/lib/Ellipsis";
 import { Graph, Node, NodeContent } from "jsplumb-react";
 import currenttb from "../assets/currenttb.svg";
 import nexttb from "../assets/nexttb.svg";
 import pretb from "../assets/pretb.svg";
+
+import G6graph from "./G6graph.js";
 
 import styles from "./Graph.less";
 
@@ -54,10 +55,22 @@ class TopologicalGraph extends React.PureComponent {
   render() {
     const {
       nodes,
-      /* connections, loading, */ onSelect,
+      connections,
+      /*  loading, */ onSelect,
       graphRef,
     } = this.props;
     const { width, height, xOffset, yOffset } = this.props;
+
+    Object.values(nodes).forEach((it, idx) => {
+      Object.assign(it, {
+        id: Object.keys(nodes)[idx],
+      });
+    });
+    const transformNodes = Object.values(nodes);
+
+    // console.log(transformNodes, connections, "血缘关系数据...");
+
+    const dataSource = { nodes: transformNodes, edges: connections };
 
     const children = Object.keys(nodes).map((nodeName) => {
       const { style } = nodes[nodeName];
@@ -91,7 +104,7 @@ class TopologicalGraph extends React.PureComponent {
           }}
         >
           <Spin spinning={false}>
-            <Graph
+            {/* <Graph
               id="topologicalgraph"
               className={styles.topologicalgraph}
               width={width}
@@ -103,7 +116,8 @@ class TopologicalGraph extends React.PureComponent {
               // onZoom={this.onZoom}
             >
               {children}
-            </Graph>
+            </Graph> */}
+            <G6graph dataSource={dataSource} />
           </Spin>
         </div>
       </div>

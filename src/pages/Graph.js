@@ -112,21 +112,14 @@ class RelationTable extends React.PureComponent {
         currentId: basicId,
       },
       () => {
-        this.getDynamicGraphHeight();
-
         this.setState({
           connections: this.transformNodeLine(this.state.relationData),
         });
 
         this.signAllNodeLayer(() => {
-          this.setState(
-            {
-              nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
-            },
-            () => {
-              // console.log(this.state.nodes, "state-nodes...");
-            }
-          );
+          this.setState({
+            nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
+          });
         });
       }
     );
@@ -138,7 +131,7 @@ class RelationTable extends React.PureComponent {
    * @returns newData - 格式化后的数据结构
    */
   transformInitData = (sourceData) => {
-    console.log(sourceData, "sourceData...");
+    // console.log(sourceData, "sourceData...");
     const newData = sourceData?.map(
       ({ id, tbname, bloodfatherids, noneauthed = false }) => ({
         id,
@@ -162,7 +155,7 @@ class RelationTable extends React.PureComponent {
       }
     });
 
-    console.log(newData, "newData...");
+    // console.log(newData, "newData...");
     return newData;
   };
 
@@ -188,7 +181,7 @@ class RelationTable extends React.PureComponent {
     });
 
     this.setContainer("linetype", node);
-    console.log(node, "node...");
+    // console.log(node, "node...");
 
     return node;
   };
@@ -211,7 +204,6 @@ class RelationTable extends React.PureComponent {
           })
         : null
     );
-    // console.log(connection, 'connection');
     return connection;
   };
 
@@ -224,10 +216,8 @@ class RelationTable extends React.PureComponent {
     const { relationData } = this.state;
     const middleNode = relationData?.find((item) => item.target);
 
-    // console.log(relationData, '初始化时的relationData...');
-
     this.signSideNodeLayer(middleNode, "pre", callback);
-    // this.signSideNodeLayer(middleNode, "next", callback);
+    this.signSideNodeLayer(middleNode, "next", callback);
   };
 
   /**
@@ -240,13 +230,11 @@ class RelationTable extends React.PureComponent {
     const { relationData = [] } = this.state;
     const curIndex = parseInt(node.index?.slice(1), 10);
 
-    // console.log(node, curIndex, "curIndex...");
-
     if (node[order]?.length) {
       node[order].forEach((perItem) => {
         const matchItem = relationData.find((item) => item.id === perItem);
         if (matchItem) {
-          console.log(node, matchItem, curIndex, "将要改变index时...");
+          // console.log(node, matchItem, curIndex, "将要改变index时...");
 
           /**
            * NOTE NOTE
@@ -267,15 +255,16 @@ class RelationTable extends React.PureComponent {
       });
     }
 
-    // console.log(node, "生成计算index后的node数据...");
-
     this.setState(
       {
-        // relationData,
         /** 此处过滤掉`旁系`节点（即不与中间节点父子主线相连的节点） */
         relationData: relationData.filter((item) => !!item.index),
       },
-      () => callback?.()
+      () => {
+        this.getDynamicGraphHeight();
+
+        callback?.();
+      }
     );
   };
 
@@ -358,7 +347,7 @@ class RelationTable extends React.PureComponent {
     // }px)`; // 大图标高56px，小图标高40px
 
     // NOTE NOTE
-    const verticalDecrementSize = 100 * Math.random().toFixed(1);
+    const verticalDecrementSize = (100 * Math.random()).toFixed(2);
     return `calc(${
       Number(percentage).toFixed(2) * 100
     }% - ${verticalDecrementSize}px)`;
