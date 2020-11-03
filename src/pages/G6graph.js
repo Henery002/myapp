@@ -2,8 +2,6 @@ import React, { PureComponent } from "react";
 
 import G6 from "@antv/g6";
 
-import registerNode from "./g6/registerNode.js";
-
 import currenttb from "../assets/currenttb.svg";
 import nexttb from "../assets/nexttb.svg";
 import pretb from "../assets/pretb.svg";
@@ -38,12 +36,42 @@ G6.registerNode(
       style: {},
       stateStyles: {
         hover: {
+          fill: "#e4393c",
           cursor: "pointer",
         },
       },
     },
     drawShape: (cfg, group) => {
-      console.log(cfg, group, "registerNode-drawShap...");
+      const shape = group.addShape("image", {
+        attrs: {},
+      });
+      // console.log(cfg, group, shape, "registerNode-drawShape...");
+
+      return shape;
+    },
+
+    // 动画
+    afterDraw: (cfg, group) => {
+      const shape = group.get("children")[0];
+      // console.log(shape, "afterdraw...");
+
+      shape.animate(
+        (ratio) => {
+          const diff = ratio <= 0.5 ? ratio * 10 : (1 - ratio) * 10;
+          return {
+            r: (cfg.size / 2) * diff,
+          };
+        },
+        {
+          repeat: true,
+          duration: 1000,
+          easing: "easeCubic",
+        }
+      );
+    },
+
+    setState: (name, value, node) => {
+      // console.log(name, value, node, "node-setState...");
     },
   },
   "image"
@@ -59,6 +87,7 @@ export default class G6Graph extends PureComponent {
   componentDidMount() {
     setTimeout(() => {
       this.getInit();
+      // console.log(this.props.toolBarContainer, "props-ref...");
     }, 400);
   }
 
@@ -104,14 +133,35 @@ export default class G6Graph extends PureComponent {
         x: (graphWidth * Number(wPercent)) / 100 - Number(wPixel),
         y: (graphHeight * Number(hPercent)) / 100 - Number(hPixel),
 
+        type: "image",
         img: this.getNodeItemIcon(item.id),
         size: item?.index === "p0" ? 56 : 40,
-        type: "image",
+        // type: "custom-node",
         label: item.label,
         labelCfg: {
           position: "bottom",
         },
       });
+    });
+
+    const $toolbar = new G6.ToolBar({
+      container: this.props.toolBarContainer?.current ?? "",
+      // getContent: () => {
+      //   return `
+      //     <ul>
+      //       <li code="enlarge">放大</li>
+      //       <li code="reduce">缩小</li>
+      //     </ul>
+      //   `;
+      // },
+      // handleClick: (code, graph) => {
+      //   console.log(code, "handleClick...");
+      //   if (code === "enlarge") {
+      //     //
+      //   } else if (code === "reduce") {
+      //     //
+      //   }
+      // },
     });
 
     const $graph = new G6.Graph({
@@ -125,7 +175,12 @@ export default class G6Graph extends PureComponent {
         default: ["drag-canvas", "zoom-canvas"],
         edit: ["click-select"],
       },
-      nodeStateStyles: {},
+      plugins: [$toolbar],
+      nodeStateStyles: {
+        hover: {
+          size: 50,
+        },
+      },
       edgeStateStyles: {},
       defaultEdge: {
         type: "custom-edge",
@@ -141,23 +196,23 @@ export default class G6Graph extends PureComponent {
         },
       },
       defaultNode: {
-        type: "custom-node",
+        // type: "custom-node",
       },
     });
 
-    registerNode($graph, {});
-
-    // 声明边事件
+    // 边事件
     $graph.on("edge:mouseenter", (ev) => {
       const edge = ev.item;
       const source = edge.getSource();
       const target = edge.getTarget();
-      // 层级置顶
+      // 置顶
       edge.toFront();
       source.toFront();
       target.toFront();
-      $graph.paint();
+
+      // 激活自定义边的状态
       $graph.setItemState(edge, "active", true);
+      $graph.paint();
     });
 
     $graph.on("edge:mouseleave", (ev) => {
@@ -167,15 +222,45 @@ export default class G6Graph extends PureComponent {
       $graph.paint();
     });
 
+    // 节点事件
+    $graph.on("node:mouseenter", (ev) => {
+      const node = ev.item;
+      const edges = node.getEdges();
+      edges.forEach((edge) => {
+        // 置顶
+        edge.toFront();
+        edge.getSource().toFront();
+        edge.getTarget().toFront();
+
+        // 激活自定义边的状态
+        $graph.setItemState(edge, "active", true);
+      });
+      $graph.paint();
+    });
+
+    $graph.on("node:mouseleave", (ev) => {
+      const edges = $graph.getEdges();
+      edges.forEach((edge) => {
+        edge.toBack();
+        $graph.setItemState(edge, "active", false);
+      });
+      $graph.paint();
+    });
+
     $graph.data(dataSource);
     $graph.render();
   };
 
   render() {
+    const { graphWidth, graphHeight } = this.props;
     return (
       <div
         ref={this.graphRef}
-        style={{ width: "100%", height: "100%", background: "#eee" }}
+        style={{
+          width: `${graphWidth}%`,
+          height: `${graphHeight}%`,
+          background: "#eee",
+        }}
       />
     );
   }

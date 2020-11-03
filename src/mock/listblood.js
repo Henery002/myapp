@@ -152,7 +152,7 @@ const listblood = [
 const basicId = "S6zDBWAnvoazCcKq-RW-";
 
 // TEMP
-const listblood_2 = [
+const listblood__ = [
   {
     id: "0ctI1LwsziQ3bU8Umaiv",
     tbname: "all_types",
@@ -243,6 +243,6 @@ const listblood_2 = [
   },
 ];
 
-const basicId_2 = "0ctI1LwsziQ3bU8Umaiv";
+const basicId__ = "0ctI1LwsziQ3bU8Umaiv";
 
 export { basicId, listblood };

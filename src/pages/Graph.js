@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 
 import G6graph from "./G6graph";
 
@@ -10,6 +11,9 @@ class RelationTable extends React.PureComponent {
 
   constructor(props) {
     super(props);
+
+    this.divRef = React.createRef();
+    this.toolBarContainer = React.createRef();
 
     this.state = {
       visible: false,
@@ -30,8 +34,9 @@ class RelationTable extends React.PureComponent {
       currentId: "",
       // relatedTableList: [],
 
-      // 画布高度动态调整(%)
-      // graphHeight: 100,
+      // 画布宽高动态调整(%)
+      graphWidth: 100,
+      graphHeight: 100,
     };
   }
 
@@ -191,7 +196,7 @@ class RelationTable extends React.PureComponent {
         relationData: relationData.filter((item) => !!item.index),
       },
       () => {
-        // this.getDynamicGraphHeight();
+        this.getDynamicGraphStyle();
 
         callback?.();
       }
@@ -284,11 +289,74 @@ class RelationTable extends React.PureComponent {
     }% - ${curNode.index === "p0" ? 28 : 20}px)`;
   };
 
+  /**
+   * NOTE 动态调整画布宽高，根据拓扑图中节点树最多(m个)的列的高度来动态撑开画布高度
+   * 撑开后的画布高度/原画布高度x：((1+(70m-0.95x)/0.95x)*100)%
+   * 数据说明：70: 单个节点分配的height; 0.95: 画布纵向内容部分占据的比例
+   */
+  getDynamicGraphStyle = () => {
+    const { relationData } = this.state;
+    // 每列节点个数([1, 4, 2])
+    const columnCount = [];
+    // 所有列(['p0', 'p1', 'p2'])
+    const columnArr = Array.from(new Set(_.map(relationData, "index")));
+    columnArr.forEach((item, idx) => {
+      columnCount[idx] = relationData?.filter(
+        (it) => it.index === item
+      )?.length;
+    });
+
+    const columnMaxCount = Math.max(...columnCount);
+    const rowMaxCount = columnArr?.length;
+
+    // 画布样式（高度），此处获取的是画布父级div
+    // （因其高度一直不会变，且和画布初始化时的高度一致，所以可用来在每次编辑后作为画布初始高度值来做计算）
+    const { width, height } = this.divRef?.current.getBoundingClientRect();
+
+    console.log(width, height, columnArr, columnMaxCount, "graphStyle...");
+
+    this.setState(
+      {
+        graphHeight:
+          70 * columnMaxCount > height
+            ? parseInt(
+                (1 +
+                  (70 * columnMaxCount - parseInt(height, 10)) /
+                    parseInt(height, 10)) *
+                  100
+              )
+            : 100,
+        graphWidth:
+          70 * rowMaxCount > width
+            ? parseInt(
+                (1 +
+                  (70 * rowMaxCount - parseInt(width, 10)) /
+                    parseInt(width, 10)) *
+                  100
+              )
+            : 100,
+      },
+      () => console.log(this.state, "graphHeight...")
+    );
+  };
+
   render() {
     const { nodes, connections } = this.state;
     return (
-      <div className={styles.relationTable}>
-        <G6graph {...this.state} dataSource={{ nodes, edges: connections }} />
+      <div
+        ref={this.divRef}
+        className={styles.relationTable}
+        style={{ width: 700, height: 600, overflow: "hidden" }}
+      >
+        <div className={styles.toolbarBox} ref={this.toolBarContainer}>
+          <span>上游节点树：** 个</span>
+          <span>下游节点树：** 个</span>
+        </div>
+        <G6graph
+          {...this.state}
+          toolBarContainer={this.toolBarContainer}
+          dataSource={{ nodes, edges: connections }}
+        />
       </div>
     );
   }
