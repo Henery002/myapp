@@ -131,13 +131,20 @@ class RelationTable extends React.PureComponent {
     sourceData.forEach((item) =>
       item.pre?.length
         ? item.pre.forEach((preItem) => {
-            connection.push({
-              id: `${sourceData.find((it) => it.id === preItem)?.name}-${
-                item.name
-              }-${Math.random().toFixed(6)}`,
-              source: sourceData.find((it) => it.id === preItem)?.id || "",
-              target: item.id || "",
-            });
+            // 过滤无效连线
+            const source = sourceData?.find((it) => it?.id === preItem);
+            // 过滤重复连线
+            const isExist = connection.filter(
+              (it) => it.source === source?.id && it.target === item.id
+            );
+
+            if (source && !isExist?.length) {
+              connection.push({
+                id: `${source.name}-${item.name}-${Math.random().toFixed(6)}`,
+                source: source?.id || "",
+                target: item.id || "",
+              });
+            }
           })
         : null
     );
@@ -313,31 +320,21 @@ class RelationTable extends React.PureComponent {
     // （因其高度一直不会变，且和画布初始化时的高度一致，所以可用来在每次编辑后作为画布初始高度值来做计算）
     const { width, height } = this.divRef?.current.getBoundingClientRect();
 
-    console.log(width, height, columnArr, columnMaxCount, "graphStyle...");
-
-    this.setState(
-      {
-        graphHeight:
-          70 * columnMaxCount > height
-            ? parseInt(
-                (1 +
-                  (70 * columnMaxCount - parseInt(height, 10)) /
-                    parseInt(height, 10)) *
-                  100
-              )
-            : 100,
-        graphWidth:
-          70 * rowMaxCount > width
-            ? parseInt(
-                (1 +
-                  (70 * rowMaxCount - parseInt(width, 10)) /
-                    parseInt(width, 10)) *
-                  100
-              )
-            : 100,
-      },
-      () => console.log(this.state, "graphHeight...")
-    );
+    this.setState({
+      graphWidth:
+        100 * rowMaxCount > width
+          ? Number(
+              (1 + (100 * rowMaxCount - Number(width)) / Number(width)) * 100
+            ).toFixed(0)
+          : 100,
+      graphHeight:
+        85 * columnMaxCount > height
+          ? Number(
+              (1 + (85 * columnMaxCount - Number(height)) / Number(height)) *
+                100
+            ).toFixed(0)
+          : 100,
+    });
   };
 
   render() {
@@ -346,7 +343,7 @@ class RelationTable extends React.PureComponent {
       <div
         ref={this.divRef}
         className={styles.relationTable}
-        style={{ width: 700, height: 600, overflow: "hidden" }}
+        style={{ width: 1000, height: 600, overflow: "hidden" }}
       >
         <div className={styles.toolbarBox} ref={this.toolBarContainer}>
           <span>上游节点树：** 个</span>
@@ -355,7 +352,7 @@ class RelationTable extends React.PureComponent {
         <G6graph
           {...this.state}
           toolBarContainer={this.toolBarContainer}
-          dataSource={{ nodes, edges: connections }}
+          // dataSource={{ nodes, edges: connections }}
         />
       </div>
     );

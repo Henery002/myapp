@@ -34,12 +34,7 @@ G6.registerNode(
   {
     options: {
       style: {},
-      stateStyles: {
-        hover: {
-          fill: "#e4393c",
-          cursor: "pointer",
-        },
-      },
+      stateStyles: {},
     },
     drawShape: (cfg, group) => {
       const shape = group.addShape("image", {
@@ -85,10 +80,7 @@ export default class G6Graph extends PureComponent {
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.getInit();
-      // console.log(this.props.toolBarContainer, "props-ref...");
-    }, 400);
+    setTimeout(() => this.getInit(), 500);
   }
 
   /**
@@ -109,14 +101,13 @@ export default class G6Graph extends PureComponent {
   };
 
   getInit = () => {
-    const { dataSource } = this.props;
+    const { nodes, connections } = this.props;
 
     const graphWidth = this.graphRef?.current?.clientWidth;
     const graphHeight = this.graphRef?.current?.clientHeight;
 
-    console.log(dataSource, graphWidth, graphHeight, "ref - initialize...");
+    console.log(nodes, connections, "ref - initialize...");
 
-    const nodes = dataSource.nodes;
     nodes.forEach((item) => {
       // 追加x/y数据
       const { left, top } = item?.style;
@@ -144,24 +135,34 @@ export default class G6Graph extends PureComponent {
       });
     });
 
+    const $minimap = new G6.Minimap({
+      size: [100, 100],
+      className: "minimap",
+      type: "delegate",
+    });
+
     const $toolbar = new G6.ToolBar({
       container: this.props.toolBarContainer?.current ?? "",
-      // getContent: () => {
-      //   return `
-      //     <ul>
-      //       <li code="enlarge">放大</li>
-      //       <li code="reduce">缩小</li>
-      //     </ul>
-      //   `;
-      // },
-      // handleClick: (code, graph) => {
-      //   console.log(code, "handleClick...");
-      //   if (code === "enlarge") {
-      //     //
-      //   } else if (code === "reduce") {
-      //     //
-      //   }
-      // },
+      getContent: () => {
+        return `
+          <ul>
+            <li code="enlarge">放大</li>
+            <li code="reduce">缩小</li>
+          </ul>
+        `;
+      },
+      handleClick: (code, graph) => {
+        console.log(code, "handleClick...");
+
+        let zoom = $graph.getZoom();
+
+        if (code === "enlarge") {
+          zoom += 0.1;
+        } else if (code === "reduce") {
+          zoom -= 0.1;
+        }
+        $graph.zoomTo(zoom);
+      },
     });
 
     const $graph = new G6.Graph({
@@ -175,11 +176,9 @@ export default class G6Graph extends PureComponent {
         default: ["drag-canvas", "zoom-canvas"],
         edit: ["click-select"],
       },
-      plugins: [$toolbar],
+      plugins: [$minimap, $toolbar],
       nodeStateStyles: {
-        hover: {
-          size: 50,
-        },
+        cursor: "pointer",
       },
       edgeStateStyles: {},
       defaultEdge: {
@@ -223,6 +222,12 @@ export default class G6Graph extends PureComponent {
     });
 
     // 节点事件
+    $graph.on("node:click", (ev) => {
+      const shape = ev.target;
+      const node = ev.item;
+      console.log(shape, node, "node-click...");
+    });
+
     $graph.on("node:mouseenter", (ev) => {
       const node = ev.item;
       const edges = node.getEdges();
@@ -247,7 +252,7 @@ export default class G6Graph extends PureComponent {
       $graph.paint();
     });
 
-    $graph.data(dataSource);
+    $graph.data({ nodes, edges: connections });
     $graph.render();
   };
 
