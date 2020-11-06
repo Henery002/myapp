@@ -56,14 +56,19 @@ class RelationTable extends React.PureComponent {
         currentId: basicId,
       },
       () => {
-        this.setState({
-          connections: this.transformNodeLine(this.state.relationData),
-        });
-
         this.signAllNodeLayer(() => {
-          this.setState({
-            nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
-          });
+          this.setState(
+            {
+              nodes: this.transformSourceToNodeData(), // 这一步必须要在 signAllNodeLayer 执行后(代码也可放在signAllNodeLayer中执行)
+            },
+
+            // NOTE 为了在处理connections过程中得到的是最终的nodes数据（避免node.index为空的情况）
+            () => {
+              this.setState({
+                connections: this.transformNodeLine(this.state.relationData),
+              });
+            }
+          );
         });
       }
     );
@@ -124,23 +129,34 @@ class RelationTable extends React.PureComponent {
   };
 
   /**
-   * 3. 将**初始数据**生成连线数据connectionData
+   * 3. 将**初始数据**生成连线数据connectionData并过滤脏数据
    */
   transformNodeLine = (sourceData) => {
     const connection = [];
     sourceData.forEach((item) =>
       item.pre?.length
         ? item.pre.forEach((preItem) => {
-            // 过滤无效连线
+            // NOTE 3.1 过滤source不存在的无效连线
             const source = sourceData?.find((it) => it?.id === preItem);
-            // 过滤重复连线
+            // NOTE 3.2 过滤source、target完全相同的重复连线
             const isExist = connection.filter(
               (it) => it.source === source?.id && it.target === item.id
             );
 
             if (source && !isExist?.length) {
+              /**
+               * NOTE TODO 3.3 过滤source、target分属上、下游的无用连线（应业务需求）
+               */
+              if (
+                source?.index?.includes("p") &&
+                source?.index !== "p0" &&
+                item.index?.includes("n")
+              ) {
+                return;
+              }
+
               connection.push({
-                id: `${source.name}-${item.name}-${Math.random().toFixed(6)}`,
+                id: `${source.name}-${item.name}`,
                 source: source?.id || "",
                 target: item.id || "",
               });
@@ -172,7 +188,7 @@ class RelationTable extends React.PureComponent {
    */
   signSideNodeLayer = (node = {}, order, callback) => {
     const { relationData = [] } = this.state;
-    const curIndex = parseInt(node.index?.slice(1), 10);
+    const curIndex = Number(node.index?.slice(1));
 
     if (node[order]?.length) {
       node[order].forEach((perItem) => {
@@ -258,7 +274,7 @@ class RelationTable extends React.PureComponent {
     const percentage =
       1 / 6 + (2 / 3) * (curNodeIndex / allLength - 1 / (2 * allLength));
 
-    return `calc(${Number(percentage).toFixed(2) * 100}% - 30px)`;
+    return `calc(${Number(percentage.toFixed(2)) * 100}% - 30px)`;
   };
 
   /**
@@ -288,10 +304,10 @@ class RelationTable extends React.PureComponent {
     //   curNode.index === "p0" ? 28 : 20
     // }px)`; // 大图标高56px，小图标高40px
 
-    const verticalDecrementSize = (100 * Math.random()).toFixed(2);
+    const verticalDecrementSize = Number((100 * Math.random()).toFixed(2));
 
     return `calc(${
-      Number(percentage).toFixed(2) * 100
+      Number(percentage.toFixed(2)) * 100
       // }% - ${verticalDecrementSize}px)`;
     }% - ${curNode.index === "p0" ? 28 : 20}px)`;
   };
@@ -324,15 +340,19 @@ class RelationTable extends React.PureComponent {
       graphWidth:
         100 * rowMaxCount > width
           ? Number(
-              (1 + (100 * rowMaxCount - Number(width)) / Number(width)) * 100
-            ).toFixed(0)
+              (1 + (100 * rowMaxCount - Number(width)) / Number(width)).toFixed(
+                0
+              ) * 100
+            )
           : 100,
       graphHeight:
         85 * columnMaxCount > height
           ? Number(
-              (1 + (85 * columnMaxCount - Number(height)) / Number(height)) *
-                100
-            ).toFixed(0)
+              (
+                1 +
+                (85 * columnMaxCount - Number(height)) / Number(height)
+              ).toFixed(0) * 100
+            )
           : 100,
     });
   };
