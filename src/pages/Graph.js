@@ -269,7 +269,8 @@ class RelationTable extends React.PureComponent {
     // 当前节点在横向层级中的层级顺序(从1开始)
     const curNodeIndex = node.index?.includes("p")
       ? preList.length - Number(node.index.slice(1))
-      : preList.length + nextList.indexOf(node.index) + 1;
+      : // : preList.length + nextList.indexOf(node.index) + 1; // 当index为n系列时该算法有问题，因为nextList的值并不一定按照正序排列
+        preList.length + Number(node.index.slice(1));
 
     const percentage =
       1 / 6 + (2 / 3) * (curNodeIndex / allLength - 1 / (2 * allLength));
@@ -363,7 +364,7 @@ class RelationTable extends React.PureComponent {
       <div
         ref={this.divRef}
         className={styles.relationTable}
-        style={{ width: 1000, height: 600, overflow: "hidden" }}
+        style={{ width: 1800, height: 600, overflow: "hidden" }}
       >
         <div className={styles.toolbarBox} ref={this.toolBarContainer}>
           <span>上游节点树：** 个</span>
