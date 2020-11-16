@@ -16,23 +16,14 @@ class RelationTable extends React.PureComponent {
     this.toolBarContainer = React.createRef();
 
     this.state = {
-      visible: false,
       width: "100%",
       height: "100%",
-      scale: 1.0,
-      maxScale: 1.3,
-      minScale: 0.7,
-      xOffset: 0.0,
-      yOffset: 0.0,
       relationData: [],
       nodes: [],
       connections: [],
       sourceData: [],
       targetData: [],
-      checkedKeys: [],
-      checkedNodes: [],
       currentId: "",
-      // relatedTableList: [],
 
       // 画布宽高动态调整(%)
       graphWidth: 100,
@@ -145,7 +136,7 @@ class RelationTable extends React.PureComponent {
 
             if (source && !isExist?.length) {
               /**
-               * NOTE TODO 3.3 过滤source、target分属上、下游的无用连线（应业务需求）
+               * NOTE 3.3 过滤source、target分属上、下游的无用连线（应业务需求）
                */
               if (
                 source?.index?.includes("p") &&
@@ -182,7 +173,7 @@ class RelationTable extends React.PureComponent {
 
   /**
    * 4.1 拓扑图
-   * TEMP 根据中间节点，计算其他节点相对于该节点的左右位置'p{index}、n{index}'，即为节点生成 index 属性值
+   * NOTE 根据中间节点，计算其他节点相对于该节点的左右位置'p{index}、n{index}'，即为节点生成 index 属性值
    * @param {SourceDataItem} node - 当前节点
    * @param {string} order - 左右位置
    */
@@ -195,7 +186,7 @@ class RelationTable extends React.PureComponent {
         const matchItem = relationData.find((item) => item.id === perItem);
         if (matchItem) {
           /**
-           * NOTE NOTE
+           * NOTE
            * 如果matchItem的index的序号已经大于当前curIndex，
            * 说明已经出现更长的路径（即当前节点的这个路径），则不能再修改其index，即不能再将其路径改短
            */
@@ -359,22 +350,17 @@ class RelationTable extends React.PureComponent {
   };
 
   render() {
-    const { nodes, connections } = this.state;
     return (
       <div
         ref={this.divRef}
         className={styles.relationTable}
-        style={{ width: 1800, height: 600, overflow: "hidden" }}
+        style={{ width: 1800, height: 800, overflow: "hidden" }}
       >
         <div className={styles.toolbarBox} ref={this.toolBarContainer}>
           <span>上游节点树：** 个</span>
           <span>下游节点树：** 个</span>
         </div>
-        <G6graph
-          {...this.state}
-          toolBarContainer={this.toolBarContainer}
-          // dataSource={{ nodes, edges: connections }}
-        />
+        <G6graph {...this.state} toolBarContainer={this.toolBarContainer} />
       </div>
     );
   }
