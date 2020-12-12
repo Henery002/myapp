@@ -11,7 +11,7 @@
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "ant-design-pro": "^2.3.2",
-    "antd": "^4.7.3",
+    "antd": "^4.9.1",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.0",
     "babel-loader": "8.1.0",
