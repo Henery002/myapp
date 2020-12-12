@@ -83,6 +83,10 @@ export default class G6Graph extends PureComponent {
     setTimeout(() => this.getInit(), 500);
   }
 
+  componentDidUpdate(preProps) {
+    console.log(preProps, "didupdate...");
+  }
+
   /**
    * 判断节点类型（1-父 | 2-当前 | 3-子）获取图标
    * @param {string} id - 当前节点id
@@ -253,6 +257,8 @@ export default class G6Graph extends PureComponent {
     });
 
     $graph.data({ nodes, edges: connections });
+
+    console.log(new Date(), "结束时间");
     $graph.render();
   };
 

@@ -4,7 +4,7 @@
 ---
 
 ##### 本算法要解决的核心问题：
-- 展示当前节点的上下游血缘节点以及各个节点之间的血缘关系
+- 展示中心节点的上下游血缘节点以及各个节点之间的血缘关系
 - 任意两个节点间连线的**最长路径**作为这两个节点间的布局距离
 - 整个系统呈现出从左到右的血缘连线关系，不允许出现反向箭头（即从右到左）的连线
 ---
@@ -12,11 +12,17 @@
 ##### 算法步骤
 
 - ###### _getInitData_
-（0. 请求接口数据）
+（0> 请求接口数据）
 在业务中，`getInitData`从接口获取源数据，通过数据处理函数（`1>` `2>` `3>`）整合得到可用的数据元（`relationData` `nodes` `connections`）
+&emsp;&emsp;_【实现】_
+&emsp;&emsp;1. 声明一个变量 relationData，通过 transfInitData 将接口返回值处理为标准格式的初始化数据，赋值给该变量
+&emsp;&emsp;2. 声明一个变量 nodes，将 transfSourceToNodeData 的返回值赋值给该变量
+&emsp;&emsp;3. 声明一个变量 connections，将 transfNodeLine 的返回值赋值给该变量
 
 - ###### _transfInitData_
 1> 将接口源数据转换为初始化的节点数据结构
+&emsp;&emsp;_【实现】_
+&emsp;&emsp;1. 遍历接口返回值，返回一个包含每个节点必要属性的对象数组，其中中心节点的index值标记为 p0，其余节点则默认为空字符串
 
 - ###### _transfSourceToNodeData_
 2> 将初始数据转换为可用的`nodeData`

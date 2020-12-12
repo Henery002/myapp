@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import _ from "lodash";
 
@@ -5,6 +6,8 @@ import G6graph from "./G6graph";
 
 import styles from "./Graph.less";
 import { basicId, listblood } from "../mock/listblood.js";
+
+import Progress from "./ProgressLoading";
 
 class RelationTable extends React.PureComponent {
   graphRef = React.createRef();
@@ -28,11 +31,18 @@ class RelationTable extends React.PureComponent {
       // 画布宽高动态调整(%)
       graphWidth: 100,
       graphHeight: 100,
+
+      loading: true, // 测试进度条
     };
   }
 
   componentDidMount() {
     this.getInitialData();
+
+    // 测试进度条
+    // setTimeout(() => {
+    //   this.setState({ loading: false });
+    // }, 15000);
   }
 
   /**
@@ -40,6 +50,7 @@ class RelationTable extends React.PureComponent {
    */
   getInitialData = () => {
     const relatedTables = listblood;
+    console.log(new Date(), "开始时间");
     this.setState(
       {
         relationData: this.transformInitData(relatedTables),
@@ -349,7 +360,10 @@ class RelationTable extends React.PureComponent {
     });
   };
 
+  handleProgressChange = () => this.setState({ loading: !this.state.loading });
+
   render() {
+    const { loading } = this.state;
     return (
       <div
         ref={this.divRef}
@@ -360,7 +374,12 @@ class RelationTable extends React.PureComponent {
           <span>上游节点树：** 个</span>
           <span>下游节点树：** 个</span>
         </div>
-        <G6graph {...this.state} toolBarContainer={this.toolBarContainer} />
+        <Progress
+          {...this.state}
+          onChange={this.handleProgressChange}
+          loading={loading}
+        />
+        {/* <G6graph {...this.state} toolBarContainer={this.toolBarContainer} /> */}
       </div>
     );
   }
