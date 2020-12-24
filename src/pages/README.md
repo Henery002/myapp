@@ -11,7 +11,7 @@
 
 ##### 算法步骤
 
-- ###### _getInitData_
+###### _getInitData_
 （0> 请求接口数据）
 在业务中，`getInitData`从接口获取源数据，通过数据处理函数（`1>` `2>` `3>`）整合得到可用的数据元（`relationData` `nodes` `connections`）
 &emsp;&emsp;_【实现】_
@@ -19,39 +19,40 @@
 &emsp;&emsp;2. 声明一个变量 nodes，将 transfSourceToNodeData 的返回值赋值给该变量
 &emsp;&emsp;3. 声明一个变量 connections，将 transfNodeLine 的返回值赋值给该变量
 
-- ###### _transfInitData_
+###### _transfInitData_
 1> 将接口源数据转换为初始化的节点数据结构
 &emsp;&emsp;_【实现】_
 &emsp;&emsp;1. 遍历接口返回值，返回一个包含每个节点必要属性的对象数组，其中中心节点的index值标记为 p0，其余节点则默认为空字符串
+&emsp;&emsp;2. 生成next值：根据每个节点的pre，反向遍历pre中的每个值，并将该节点的id放入该值的next数组中
 
-- ###### _transfSourceToNodeData_
+###### _transfSourceToNodeData_
 2> 将初始数据转换为可用的`nodeData`
 调用方法`5.1>` `5.2>`计算节点的坐标值`style`
 
-- ###### _transfNodeLine_
+###### _transfNodeLine_
 3> 将初始数据生成连线数据`connectionData`并过滤噪音连线
 将源数据通过遍历得到`connection`连线数据，并根据以下规则过滤噪音连线：
   1. 过滤`source`不存在的无效连线
   2. 过滤`source` `target`完全相同的重复连线
   3. 过滤`source` `target`分属上、下游的无用连线
 
-- ###### _<font color=blue>signSideNodeLayer</font>_
-4> 根据中间节点计算其他节点相对于该节点的左右位置'`p{index}`、`n{index}`'，即为节点生成`index`属性值
+###### _<font color=blue>signSideNodeLayer</font>_ 最长路径（Longest Path）算法
+4> 根据中间节点计算其他节点相对于该节点的左右位置'`P{index}`、`N{index}`'，即为节点生成`index`属性值
 一个`递归算法`，循环枚举遍历所有节点的所有连线造成的所有路径值的可能情况，并通过相关关键判断条件，计算得到正确的路径值
 
-- ###### _calcNodeLeftPosition_
+###### _calcNodeLeftPosition_
 5.1> 计算节点坐标的`left`值
 `left`值计算方式：`((1/3)/2 + (2/3)*(当前节点的顺序(从1开始)/总结点数 - 1/当前空间(2*总结点数)等份))*100% - (节点宽度/2)px`
 即水平方向均匀分布在 `1/6` ~ `5/6` 的中心区域
 
-- ###### _calcNodeTopPosition_
+###### _calcNodeTopPosition_
 5.2> 计算节点坐标的`top`值
 `top`值计算方式：`((1/4)/2 + (3/4)*(当前节点的顺序(从1开始)/每层纵向总节点数 - 1/当前空间(2*纵向总结点数)等份))*100% - (节点高度/2)px`
 即垂直方向均匀分布在 `1/8` ~ `7/8` 的中心区域内
 
-- ###### _getDynamicGraphStyle_
+###### _getDynamicGraphStyle_
 6> 动态调整画布宽高。根据拓扑图中节点树最多(`m`个)的列的高度来动态撑开画布高度，宽度同理
 撑开后的画布高度/原画布高度`x`: `((1 + (70m - 0.95x)/0.95x) * 100)%`
-数据说明：`70`: 单节点分配的`height`; `0.95`: 画布垂直方向内容部分占据的比例
+数据说明：`70`: 单节点分配的`height`; `0.95`: 画布垂直方向节点整体占据的比例
 
 

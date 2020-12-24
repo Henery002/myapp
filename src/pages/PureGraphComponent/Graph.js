@@ -2,18 +2,16 @@ import React, { PureComponent } from "react";
 
 import G6 from "@antv/g6";
 
-import currenttb from "../assets/currenttb.svg";
-import nexttb from "../assets/nexttb.svg";
-import pretb from "../assets/pretb.svg";
+import currenttb from "./assets/currenttb.svg";
+import nexttb from "./assets/nexttb.svg";
+import pretb from "./assets/pretb.svg";
 
-// 注册一个边类型
 G6.registerEdge(
   "custom-edge",
   {
     setState: (name, value, item) => {
       const group = item.getContainer();
       const shape = group.get("children")[0];
-      // 自定义边样式
       if (name === "active") {
         if (value) {
           shape.attr("stroke", "#1980ff");
@@ -28,7 +26,6 @@ G6.registerEdge(
   "cubic-horizontal"
 );
 
-// 注册一个节点类型
 G6.registerNode(
   "custom-node",
   {
@@ -40,15 +37,12 @@ G6.registerNode(
       const shape = group.addShape("image", {
         attrs: {},
       });
-      // console.log(cfg, group, shape, "registerNode-drawShape...");
 
       return shape;
     },
 
-    // 动画
     afterDraw: (cfg, group) => {
       const shape = group.get("children")[0];
-      // console.log(shape, "afterdraw...");
 
       shape.animate(
         (ratio) => {
@@ -65,9 +59,7 @@ G6.registerNode(
       );
     },
 
-    setState: (name, value, node) => {
-      // console.log(name, value, node, "node-setState...");
-    },
+    setState: (name, value, node) => {},
   },
   "image"
 );
@@ -83,14 +75,6 @@ export default class G6Graph extends PureComponent {
     setTimeout(() => this.getInit(), 500);
   }
 
-  componentDidUpdate(preProps) {
-    // console.log(preProps, "didupdate...");
-  }
-
-  /**
-   * 判断节点类型（1-父 | 2-当前 | 3-子）获取图标
-   * @param {string} id - 当前节点id
-   */
   getNodeItemIcon = (id) => {
     const { relationData } = this.props;
 
@@ -110,10 +94,7 @@ export default class G6Graph extends PureComponent {
     const graphWidth = this.graphRef?.current?.clientWidth;
     const graphHeight = this.graphRef?.current?.clientHeight;
 
-    // console.log(nodes, connections, "ref - initialize...");
-
     nodes.forEach((item) => {
-      // 追加x/y数据
       const { left, top } = item?.style;
       const wPercent = left?.slice(5, 7);
       const wPercentC = left.indexOf("%");
@@ -123,7 +104,6 @@ export default class G6Graph extends PureComponent {
       const hPercentC = top.indexOf("%");
       const hPixel = top.slice(hPercentC + 4, hPercentC + 6);
 
-      // console.log(wPercent, wPixel, hPercent, hPixel, "wPercent.........");
       Object.assign(item, {
         x: (graphWidth * Number(wPercent)) / 100 - Number(wPixel),
         y: (graphHeight * Number(hPercent)) / 100 - Number(hPixel),
@@ -131,7 +111,6 @@ export default class G6Graph extends PureComponent {
         type: "image",
         img: this.getNodeItemIcon(item.id),
         size: item?.index === "p0" ? 56 : 40,
-        // type: "custom-node",
         label: item.label,
         labelCfg: {
           position: "bottom",
@@ -145,42 +124,17 @@ export default class G6Graph extends PureComponent {
       type: "delegate",
     });
 
-    const $toolbar = new G6.ToolBar({
-      container: this.props.toolBarContainer?.current ?? "",
-      getContent: () => {
-        return `
-          <ul>
-            <li code="enlarge">放大</li>
-            <li code="reduce">缩小</li>
-          </ul>
-        `;
-      },
-      handleClick: (code, graph) => {
-        // console.log(code, "handleClick...");
-
-        let zoom = $graph.getZoom();
-
-        if (code === "enlarge") {
-          zoom += 0.1;
-        } else if (code === "reduce") {
-          zoom -= 0.1;
-        }
-        $graph.zoomTo(zoom);
-      },
-    });
-
     const $graph = new G6.Graph({
       container: this.graphRef.current || "",
       width: this.graphRef.current.clientWidth,
       height: this.graphRef.current.clientHeight,
-      // fitView: true,
       fitCenter: true,
       autoPaint: true,
       modes: {
         default: ["drag-canvas", "zoom-canvas"],
         edit: ["click-select"],
       },
-      plugins: [$minimap, $toolbar],
+      plugins: [$minimap],
       nodeStateStyles: {
         cursor: "pointer",
       },
@@ -198,22 +152,16 @@ export default class G6Graph extends PureComponent {
           cursor: "pointer",
         },
       },
-      defaultNode: {
-        // type: "custom-node",
-      },
     });
 
-    // 边事件
     $graph.on("edge:mouseenter", (ev) => {
       const edge = ev.item;
       const source = edge.getSource();
       const target = edge.getTarget();
-      // 置顶
       edge.toFront();
       source.toFront();
       target.toFront();
 
-      // 激活自定义边的状态
       $graph.setItemState(edge, "active", true);
       $graph.paint();
     });
@@ -225,23 +173,14 @@ export default class G6Graph extends PureComponent {
       $graph.paint();
     });
 
-    // 节点事件
-    $graph.on("node:click", (ev) => {
-      const shape = ev.target;
-      const node = ev.item;
-      // console.log(shape, node, "node-click...");
-    });
-
     $graph.on("node:mouseenter", (ev) => {
       const node = ev.item;
       const edges = node.getEdges();
       edges.forEach((edge) => {
-        // 置顶
         edge.toFront();
         edge.getSource().toFront();
         edge.getTarget().toFront();
 
-        // 激活自定义边的状态
         $graph.setItemState(edge, "active", true);
       });
       $graph.paint();
@@ -258,20 +197,19 @@ export default class G6Graph extends PureComponent {
 
     $graph.data({ nodes, edges: connections });
 
-    // console.log(new Date(), "结束时间");
-    console.log(this.props, "props...");
     $graph.render();
   };
 
   render() {
     const { graphWidth, graphHeight } = this.props;
+
+    console.log(graphWidth, graphHeight, "props...");
     return (
       <div
         ref={this.graphRef}
         style={{
-          width: `${graphWidth}%`,
-          height: `${graphHeight}%`,
-          background: "#eee",
+          width: graphWidth,
+          height: graphHeight,
         }}
       />
     );
